@@ -11,6 +11,7 @@ import { HostingGeoPanel } from "@/components/HostingGeoPanel";
 import { DomainIntelligenceCard } from "@/components/DomainIntelligenceCard";
 import { SecurityConfigurationCard } from "@/components/SecurityConfigurationCard";
 import { CaseReportsExports, type ReportItem } from "@/components/CaseReportsExports";
+import { ReportDownloads } from "@/components/ReportDownloads";
 
 import { generateCaseReportPdf, type CaseReportData, type RiskScore } from "@/lib/pdfReport";
 
@@ -271,6 +272,8 @@ export function CyberInvestigationDashboard() {
               </CardContent>
             </Card>
           </section>
+
+          <ReportDownloads items={reports} />
 
           <div className="text-left text-xs text-muted-foreground">
             Wireframe data is simulated. Integrate approved enrichment sources before operational use.
