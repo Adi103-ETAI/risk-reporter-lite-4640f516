@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
 import { TopNav } from "@/components/TopNav";
 import { RiskAssessmentCard } from "@/components/RiskAssessmentCard";
 import { HostingGeoPanel } from "@/components/HostingGeoPanel";
@@ -18,6 +21,8 @@ import { generateCaseReportPdf, type CaseReportData, type RiskScore } from "@/li
 type AnalysisResult = {
   riskScore: RiskScore;
 };
+
+type CaseRow = Tables<"cases">;
 
 function pseudoAnalyze(domain: string): AnalysisResult {
   const d = domain.trim().toLowerCase();
@@ -52,6 +57,9 @@ export function CyberInvestigationDashboard() {
   const [shouldFlyTo, setShouldFlyTo] = React.useState(false);
 
   const [reports, setReports] = React.useState<ReportItem[]>([]);
+  const [cases, setCases] = React.useState<CaseRow[]>([]);
+  const [casesLoading, setCasesLoading] = React.useState(false);
+  const [casesError, setCasesError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     return () => {
@@ -59,6 +67,36 @@ export function CyberInvestigationDashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  React.useEffect(() => {
+    if (activeTab !== "Active Cases") return;
+
+    let cancelled = false;
+    async function loadCases() {
+      setCasesLoading(true);
+      setCasesError(null);
+      const { data, error } = await supabase
+        .from("cases")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Failed to load cases", error);
+        setCasesError("Unable to load active cases.");
+      } else {
+        setCases(data ?? []);
+      }
+      setCasesLoading(false);
+    }
+
+    loadCases();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   const runAnalysis = async () => {
     const cleaned = domain.trim();
@@ -153,6 +191,74 @@ export function CyberInvestigationDashboard() {
           <div className="text-left text-xs text-muted-foreground">
             Wireframe data is simulated. Integrate approved enrichment sources before operational use.
           </div>
+        </main>
+      ) : activeTab === "Active Cases" ? (
+        <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+          <Card className="surface-elevated">
+            <CardContent className="p-6 space-y-3">
+              <div className="text-sm font-semibold">Active Cases</div>
+              <div className="text-xs text-muted-foreground">
+                Monitor ongoing investigations, review status, and quickly jump back into critical targets.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="surface-elevated">
+            <CardContent className="p-0">
+              <div className="overflow-hidden rounded-xl border bg-background">
+                <div className="hidden grid-cols-12 gap-3 border-b bg-panel px-4 py-3 text-[11px] font-semibold text-muted-foreground sm:grid">
+                  <div className="col-span-4">CASE</div>
+                  <div className="col-span-3">TARGET</div>
+                  <div className="col-span-3">STATUS</div>
+                  <div className="col-span-2">OPENED</div>
+                </div>
+
+                {casesLoading ? (
+                  <div className="p-6 text-left text-sm text-muted-foreground">Loading active cases…</div>
+                ) : casesError ? (
+                  <div className="p-6 text-left text-sm">
+                    <div className="font-medium">Unable to load cases</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{casesError}</div>
+                  </div>
+                ) : cases.length === 0 ? (
+                  <div className="p-6 text-left text-sm">
+                    <div className="font-medium">No active cases</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      New investigations will appear here once created in the case management view.
+                    </div>
+                  </div>
+                ) : (
+                  <ul className="divide-y">
+                    {cases.map((c) => (
+                      <li key={c.id} className="p-4">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center sm:gap-3">
+                          <div className="sm:col-span-4">
+                            <div className="truncate text-xs font-semibold">{c.title}</div>
+                            {c.summary ? (
+                              <div className="truncate text-[11px] text-muted-foreground">{c.summary}</div>
+                            ) : null}
+                          </div>
+                          <div className="sm:col-span-3">
+                            <div className="truncate text-xs font-medium">{c.target || "—"}</div>
+                          </div>
+                          <div className="sm:col-span-3">
+                            <span className="inline-flex items-center rounded-full border bg-panel px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                              {c.status}
+                            </span>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(c.created_at).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </main>
       ) : (
         <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
