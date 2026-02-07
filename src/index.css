@@ -2,87 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+   All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Forensics / law-enforcement UI: cool neutrals + restrained cyan brand */
+    --background: 220 22% 98%;
+    --foreground: 222 35% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 35% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 35% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --panel: 220 26% 96%;
+    --panel-foreground: 222 35% 12%;
+
+    --primary: 200 86% 38%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --brand: 200 86% 38%;
+    --brand-foreground: 210 40% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --secondary: 220 18% 92%;
+    --secondary-foreground: 222 35% 12%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --muted: 220 18% 94%;
+    --muted-foreground: 220 10% 40%;
 
-    --destructive: 0 84.2% 60.2%;
+    --accent: 200 30% 92%;
+    --accent-foreground: 222 35% 12%;
+
+    --destructive: 0 76% 48%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 62% 34%;
+    --success-foreground: 210 40% 98%;
 
-    --radius: 0.5rem;
+    --warning: 38 92% 44%;
+    --warning-foreground: 210 40% 98%;
 
+    --border: 220 18% 86%;
+    --input: 220 18% 86%;
+    --ring: 200 86% 38%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar tokens (kept for component compatibility) */
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 42% 7%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222 42% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 42% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --panel: 222 40% 11%;
+    --panel-foreground: 210 40% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 200 86% 48%;
+    --primary-foreground: 222 42% 9%;
+
+    --brand: 200 86% 48%;
+    --brand-foreground: 222 42% 9%;
+
+    --secondary: 222 28% 15%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 222 28% 15%;
+    --muted-foreground: 217 14% 72%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 200 26% 16%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62% 34%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --success: 142 56% 40%;
+    --success-foreground: 222 42% 9%;
+
+    --warning: 38 92% 52%;
+    --warning-foreground: 222 42% 9%;
+
+    --border: 222 28% 18%;
+    --input: 222 28% 18%;
+    --ring: 200 86% 48%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +121,23 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+      "Segoe UI Emoji";
+  }
+}
+
+@layer utilities {
+  .bg-investigation-grid {
+    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 0 0;
+  }
+
+  .surface-elevated {
+    box-shadow: 0 12px 30px -18px hsl(var(--foreground) / 0.28);
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
 }
