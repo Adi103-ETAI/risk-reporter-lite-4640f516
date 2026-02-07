@@ -38,14 +38,14 @@ function safeLocalTime(tz?: string) {
 }
 
 export function HostingGeoPanel({
-  ip = "192.168.45.12",
-  location = "Moscow, RU",
-  asn = "AS12345",
-  org = "BadActor Net Ltd.",
-  isp = "Secure Hosting Solutions LLC",
-  latitude = 55.7558,
-  longitude = 37.6173,
-  timezone = "Europe/Moscow",
+  ip = "203.122.58.14",
+  location = "New Delhi, IN",
+  asn = "AS24560",
+  org = "Bharti Airtel Ltd.",
+  isp = "Airtel Broadband",
+  latitude = 28.6139,
+  longitude = 77.2090,
+  timezone = "Asia/Kolkata",
   flyTo = false,
 }: HostingGeoPanelProps) {
   const coords = React.useMemo(() => formatCoords(latitude, longitude), [latitude, longitude]);

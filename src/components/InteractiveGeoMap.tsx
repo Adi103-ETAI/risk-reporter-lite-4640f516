@@ -77,9 +77,9 @@ function ZoomControls() {
 }
 
 export function InteractiveGeoMap({
-  latitude = 55.7558,
-  longitude = 37.6173,
-  location = "Moscow, RU",
+  latitude = 28.6139,
+  longitude = 77.2090,
+  location = "New Delhi, IN",
   flyTo = false,
 }: InteractiveGeoMapProps) {
   const position: LatLngExpression = [latitude, longitude];
