@@ -17,23 +17,24 @@ import { CaseReportsExports, type ReportItem } from "@/components/CaseReportsExp
 import { ReportDownloads } from "@/components/ReportDownloads";
 
 import { generateCaseReportPdf, type CaseReportData, type RiskScore } from "@/lib/pdfReport";
+import { scoreUrlRisk, type UrlRiskResult } from "@/lib/urlRisk";
 
 type AnalysisResult = {
   riskScore: RiskScore;
+  risk: UrlRiskResult;
 };
 
 type CaseRow = Tables<"cases">;
 
-function pseudoAnalyze(domain: string): AnalysisResult {
-  const d = domain.trim().toLowerCase();
-  const flags = {
-    looksNew: /(xyz|top|click|icu)$/.test(d),
-    suspiciousTerms: /(secure|verify|login|account|support)/.test(d),
-    hasManySubdomains: (d.match(/\./g)?.length ?? 0) >= 3,
-  };
-
-  const score: RiskScore = flags.suspiciousTerms || flags.looksNew ? "HIGH" : flags.hasManySubdomains ? "MEDIUM" : "LOW";
-  return { riskScore: score };
+function riskScoreFromClassification(classification: UrlRiskResult["classification"]): RiskScore {
+  switch (classification) {
+    case "Safe":
+      return "LOW";
+    case "Suspicious":
+      return "MEDIUM";
+    case "Dangerous":
+      return "HIGH";
+  }
 }
 
 function safeFileSegment(input: string) {
@@ -111,7 +112,12 @@ export function CyberInvestigationDashboard() {
     setShouldFlyTo(false);
 
     await new Promise((r) => setTimeout(r, 700));
-    setResult(pseudoAnalyze(cleaned));
+
+    const risk = scoreUrlRisk(cleaned);
+    setResult({
+      risk,
+      riskScore: riskScoreFromClassification(risk.classification),
+    });
 
     setIsAnalyzing(false);
     setShouldFlyTo(true);
