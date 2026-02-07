@@ -14,16 +14,144 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      case_events: {
+        Row: {
+          actor_id: string | null
+          case_id: string
+          created_at: string
+          event_type: string
+          from_status: Database["public"]["Enums"]["case_status"] | null
+          id: string
+          note: string | null
+          to_status: Database["public"]["Enums"]["case_status"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          case_id: string
+          created_at?: string
+          event_type: string
+          from_status?: Database["public"]["Enums"]["case_status"] | null
+          id?: string
+          note?: string | null
+          to_status?: Database["public"]["Enums"]["case_status"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: Database["public"]["Enums"]["case_status"] | null
+          id?: string
+          note?: string | null
+          to_status?: Database["public"]["Enums"]["case_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          status: Database["public"]["Enums"]["case_status"]
+          summary: string | null
+          target: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          owner_id: string
+          status?: Database["public"]["Enums"]["case_status"]
+          summary?: string | null
+          target?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          status?: Database["public"]["Enums"]["case_status"]
+          summary?: string | null
+          target?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "analyst" | "lead_analyst" | "admin" | "auditor"
+      case_status: "active" | "pending" | "flagged" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +278,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["analyst", "lead_analyst", "admin", "auditor"],
+      case_status: ["active", "pending", "flagged", "closed"],
+    },
   },
 } as const
