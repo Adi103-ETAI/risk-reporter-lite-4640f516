@@ -73,11 +73,20 @@ export function HostingGeoPanel({
           aria-hidden="true"
         />
 
+        {/* CYBERTRACE overlays */}
+        <div className="pointer-events-none absolute inset-0 radar-grid" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 map-scanlines opacity-0 motion-safe:opacity-100 motion-reduce:hidden" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 radar-sweep motion-reduce:hidden" aria-hidden="true" />
+
         {/* Map pin (visual cue only; not a real projection) */}
         <div className="pointer-events-none absolute left-[54%] top-[44%] -translate-x-1/2 -translate-y-full">
           <div className="relative">
             <div className="absolute -inset-2 rounded-full bg-brand/15 blur-md" aria-hidden="true" />
             <MapPin className="relative h-6 w-6 text-brand drop-shadow" />
+
+            <div className="absolute left-1/2 top-7 w-max -translate-x-1/2 rounded-full border bg-panel/90 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur">
+              {location}
+            </div>
           </div>
         </div>
 
