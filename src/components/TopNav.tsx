@@ -1,8 +1,15 @@
 import * as React from "react";
 import { CheckCircle2, CircleUserRound } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+
+const toActive = (pathname: string): "Dashboard" | "Active Cases" | "History" => {
+  if (pathname.startsWith("/cases")) return "Active Cases";
+  if (pathname.startsWith("/history")) return "History";
+  return "Dashboard";
+};
 
 export function TopNav({
-  active = "Dashboard",
+  active,
   userLabel = "Det. J. Doe",
   unitLabel = "Cyber Crimes Unit",
 }: {
@@ -10,7 +17,14 @@ export function TopNav({
   userLabel?: string;
   unitLabel?: string;
 }) {
-  const items: Array<typeof active> = ["Dashboard", "Active Cases", "History"];
+  const location = useLocation();
+  const derivedActive = active ?? toActive(location.pathname);
+
+  const items: Array<{ label: typeof derivedActive; to: string }> = [
+    { label: "Dashboard", to: "/" },
+    { label: "Active Cases", to: "/cases" },
+    { label: "History", to: "/history" },
+  ];
 
   return (
     <header className="border-b bg-background/80 backdrop-blur">
@@ -21,12 +35,12 @@ export function TopNav({
           </div>
 
           <nav className="hidden items-center gap-6 sm:flex" aria-label="Primary">
-            {items.map((label) => {
-              const isActive = label === active;
+            {items.map(({ label, to }) => {
+              const isActive = label === derivedActive;
               return (
-                <button
+                <Link
                   key={label}
-                  type="button"
+                  to={to}
                   className={
                     "text-sm transition-colors focus-ring " +
                     (isActive ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground")
@@ -39,7 +53,7 @@ export function TopNav({
                       <span className="absolute -bottom-2 left-0 h-[2px] w-full rounded bg-brand" aria-hidden="true" />
                     ) : null}
                   </span>
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -65,3 +79,4 @@ export function TopNav({
     </header>
   );
 }
+
