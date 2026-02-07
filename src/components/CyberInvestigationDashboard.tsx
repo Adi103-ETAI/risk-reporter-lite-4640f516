@@ -181,7 +181,7 @@ export function CyberInvestigationDashboard() {
               <div className="lg:col-span-1 lg:flex lg:items-end">
                 <Button onClick={runAnalysis} disabled={isAnalyzing} className="w-full h-10">
                   <span className="inline-flex w-[120px] items-center justify-center text-[11px] font-semibold tracking-[0.14em]">
-                    {isAnalyzing ? "Analyzing…" : "Analyze Target"}
+                    {isAnalyzing ? "Submitting…" : "Submit"}
                   </span>
                 </Button>
               </div>
