@@ -2,6 +2,7 @@ import * as React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { supabase } from "@/integrations/supabase/client";
+import { stripLovableTokenFromUrl } from "@/lib/lovableToken";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -39,9 +40,12 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (loading) return null;
 
   if (!authed) {
-    const redirect = encodeURIComponent(location.pathname + location.search + location.hash);
+    const raw = location.pathname + location.search + location.hash;
+    const sanitized = stripLovableTokenFromUrl(raw);
+    const redirect = encodeURIComponent(sanitized);
     return <Navigate to={`/auth?redirect=${redirect}`} replace />;
   }
 
   return <>{children}</>;
 }
+
