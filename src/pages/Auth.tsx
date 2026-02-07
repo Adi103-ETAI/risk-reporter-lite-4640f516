@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,13 +9,24 @@ import { toast } from "@/components/ui/use-toast";
 
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfileAndDefaultRole } from "@/lib/authBootstrap";
+import {
+  consumeLovableToken,
+  consumeTokenFromCurrentLocationOnce,
+  stripLovableTokenFromUrl,
+} from "@/lib/lovableToken";
+
+function sanitizeRedirect(rawRedirect: string | null): string {
+  const value = (rawRedirect ?? "/").trim() || "/";
+  // Ensure we always remove __lovable_token even when redirect is encoded like /?__lovable_token=...
+  const stripped = stripLovableTokenFromUrl(value);
+  return stripped.startsWith("/") ? stripped : "/";
+}
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
 
-  const redirect = params.get("redirect") || "/";
+  const redirect = sanitizeRedirect(params.get("redirect"));
 
   const [mode, setMode] = React.useState<"login" | "signup">("login");
   const [email, setEmail] = React.useState("");
@@ -24,6 +35,33 @@ export default function AuthPage() {
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
+    // 1) Consume token if it exists in the *current* URL, then remove it from the address bar.
+    const consumed = consumeTokenFromCurrentLocationOnce();
+    if (consumed.didConsume && consumed.strippedUrl) {
+      navigate(consumed.strippedUrl, { replace: true });
+      return;
+    }
+
+    // 2) If token is embedded inside redirect (e.g. /auth?redirect=/%3F__lovable_token=...), consume it and rewrite redirect.
+    try {
+      const decoded = decodeURIComponent(params.get("redirect") ?? "");
+      const u = new URL(decoded.startsWith("/") ? window.location.origin + decoded : decoded);
+      const token = u.searchParams.get("__lovable_token");
+      if (token) {
+        consumeLovableToken(token);
+        u.searchParams.delete("__lovable_token");
+        const cleanedRedirect = u.pathname + u.search + u.hash;
+        setParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("redirect", cleanedRedirect || "/");
+          return next;
+        }, { replace: true } as any);
+      }
+    } catch {
+      // ignore
+    }
+
+    // 3) If already authed, go straight to dashboard (sanitized).
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate(redirect, { replace: true });
     });
@@ -32,6 +70,16 @@ export default function AuthPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.trim() || !password.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Missing credentials",
+        description: "Please enter both email and password.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -91,13 +139,25 @@ export default function AuthPage() {
               {mode === "signup" ? (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Display name</Label>
-                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" />
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    autoComplete="name"
+                    className="bg-background"
+                  />
                 </div>
               ) : null}
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+                <Input
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  className="bg-background"
+                />
               </div>
 
               <div className="space-y-2">
@@ -108,6 +168,7 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  className="bg-background"
                 />
               </div>
 
@@ -134,7 +195,6 @@ export default function AuthPage() {
 
             <div className="mt-4 text-left text-xs text-muted-foreground">
               Redirect after sign in: <span className="font-medium text-foreground">{redirect}</span>
-              {location.pathname !== "/auth" ? null : null}
             </div>
           </CardContent>
         </Card>
@@ -142,3 +202,4 @@ export default function AuthPage() {
     </div>
   );
 }
+
