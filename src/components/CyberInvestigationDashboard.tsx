@@ -40,6 +40,7 @@ function safeFileSegment(input: string) {
 }
 
 export function CyberInvestigationDashboard() {
+  const [activeTab, setActiveTab] = React.useState<"Dashboard" | "Active Cases" | "History">("Dashboard");
   const [domain, setDomain] = React.useState("");
   const [analystName, setAnalystName] = React.useState("Det. J. Doe");
   const [caseId, setCaseId] = React.useState("");
@@ -128,122 +129,154 @@ export function CyberInvestigationDashboard() {
 
   return (
     <div className="min-h-screen bg-investigation-grid">
-      <TopNav active="Dashboard" userLabel={analystName || "Det. J. Doe"} unitLabel="Cyber Crimes Unit" />
+      <TopNav
+        active={activeTab}
+        onChangeActive={setActiveTab}
+        userLabel={analystName || "Det. J. Doe"}
+        unitLabel="Cyber Crimes Unit"
+      />
 
-      <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
-        <Card className="surface-elevated">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              <div className="text-sm font-semibold">New Investigation Query</div>
-            </div>
-
-            <div className="mt-4 grid gap-4 lg:grid-cols-12">
-              <div className="lg:col-span-4">
-                <label className="mb-1.5 block text-[11px] font-semibold tracking-[0.14em] text-muted-foreground" htmlFor="analyst">
-                  ANALYST NAME
-                </label>
-                <Input
-                  id="analyst"
-                  value={analystName}
-                  onChange={(e) => setAnalystName(e.target.value)}
-                  placeholder="Det. J. Doe"
-                  className="bg-background"
-                  autoComplete="off"
-                />
+      {activeTab === "History" ? (
+        <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+          <Card className="surface-elevated">
+            <CardContent className="p-6 space-y-3">
+              <div className="text-sm font-semibold">Case History</div>
+              <div className="text-xs text-muted-foreground">
+                Review previously generated reports for completed or archived investigations.
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="lg:col-span-4">
-                <label className="mb-1.5 block text-[11px] font-semibold tracking-[0.14em] text-muted-foreground" htmlFor="caseId">
-                  CASE REFERENCE ID
-                </label>
-                <Input
-                  id="caseId"
-                  value={caseId}
-                  onChange={(e) => setCaseId(e.target.value)}
-                  placeholder="e.g., CASE-24-001"
-                  className="bg-background"
-                  autoComplete="off"
-                />
-              </div>
+          <CaseReportsExports items={reports} onGenerate={onGeneratePdf} />
 
-              <div className="lg:col-span-3">
-                <label className="mb-1.5 block text-[11px] font-semibold tracking-[0.14em] text-muted-foreground" htmlFor="domain">
-                  TARGET DOMAIN / URL
-                </label>
-                <Input
-                  id="domain"
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  placeholder="Enter domain URL (e.g., suspicious-site.net)"
-                  className="bg-background"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="lg:col-span-1 lg:flex lg:items-end">
-                <Button onClick={runAnalysis} disabled={isAnalyzing} className="w-full h-10">
-                  <span className="inline-flex w-[120px] items-center justify-center text-[11px] font-semibold tracking-[0.14em]">
-                    {isAnalyzing ? "Submitting…" : "Submit"}
-                  </span>
-                </Button>
-              </div>
-            </div>
-
-            {error ? (
-              <div className="mt-4 rounded-lg border bg-panel px-4 py-3 text-left text-sm">
-                <span className="font-medium">Input required:</span> <span className="text-muted-foreground">{error}</span>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        <section className="grid gap-6 lg:grid-cols-12">
-          <Card className="surface-elevated lg:col-span-4">
+          <div className="text-left text-xs text-muted-foreground">
+            Wireframe data is simulated. Integrate approved enrichment sources before operational use.
+          </div>
+        </main>
+      ) : (
+        <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+          <Card className="surface-elevated">
             <CardContent className="p-6">
-              {result ? (
-                <RiskAssessmentCard score={result.riskScore} />
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-sm font-semibold">Risk Assessment</div>
-                  <div className="rounded-xl border bg-panel p-6 text-left">
-                    <div className="text-sm font-medium">Awaiting analysis</div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      Run “Analyze Target” to compute risk, populate infrastructure details, and enable report generation.
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                <div className="text-sm font-semibold">New Investigation Query</div>
+              </div>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-12">
+                <div className="lg:col-span-4">
+                  <label
+                    className="mb-1.5 block text-[11px] font-semibold tracking-[0.14em] text-muted-foreground"
+                    htmlFor="analyst"
+                  >
+                    ANALYST NAME
+                  </label>
+                  <Input
+                    id="analyst"
+                    value={analystName}
+                    onChange={(e) => setAnalystName(e.target.value)}
+                    placeholder="Det. J. Doe"
+                    className="bg-background"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="lg:col-span-4">
+                  <label
+                    className="mb-1.5 block text-[11px] font-semibold tracking-[0.14em] text-muted-foreground"
+                    htmlFor="caseId"
+                  >
+                    CASE REFERENCE ID
+                  </label>
+                  <Input
+                    id="caseId"
+                    value={caseId}
+                    onChange={(e) => setCaseId(e.target.value)}
+                    placeholder="e.g., CASE-24-001"
+                    className="bg-background"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="lg:col-span-3">
+                  <label
+                    className="mb-1.5 block text-[11px] font-semibold tracking-[0.14em] text-muted-foreground"
+                    htmlFor="domain"
+                  >
+                    TARGET DOMAIN / URL
+                  </label>
+                  <Input
+                    id="domain"
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value)}
+                    placeholder="Enter domain URL (e.g., suspicious-site.net)"
+                    className="bg-background"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="lg:col-span-1 lg:flex lg:items-end">
+                  <Button onClick={runAnalysis} disabled={isAnalyzing} className="h-10 w-full">
+                    <span className="inline-flex w-[120px] items-center justify-center text-[11px] font-semibold tracking-[0.14em]">
+                      {isAnalyzing ? "Submitting…" : "Submit"}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+
+              {error ? (
+                <div className="mt-4 rounded-lg border bg-panel px-4 py-3 text-left text-sm">
+                  <span className="font-medium">Input required:</span>{" "}
+                  <span className="text-muted-foreground">{error}</span>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <section className="grid gap-6 lg:grid-cols-12">
+            <Card className="surface-elevated lg:col-span-4">
+              <CardContent className="p-6">
+                {result ? (
+                  <RiskAssessmentCard score={result.riskScore} />
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold">Risk Assessment</div>
+                    <div className="rounded-xl border bg-panel p-6 text-left">
+                      <div className="text-sm font-medium">Awaiting analysis</div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Run “Analyze Target” to compute risk, populate infrastructure details, and enable report generation.
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
 
-          <Card className="surface-elevated lg:col-span-8">
-            <CardContent className="p-6">
-              <HostingGeoPanel flyTo={shouldFlyTo} />
-            </CardContent>
-          </Card>
-        </section>
+            <Card className="surface-elevated lg:col-span-8">
+              <CardContent className="p-6">
+                <HostingGeoPanel flyTo={shouldFlyTo} />
+              </CardContent>
+            </Card>
+          </section>
 
-        <section className="grid gap-6 lg:grid-cols-12">
-          <Card className="surface-elevated lg:col-span-4">
-            <CardContent className="p-6">
-              <DomainIntelligenceCard />
-            </CardContent>
-          </Card>
+          <section className="grid gap-6 lg:grid-cols-12">
+            <Card className="surface-elevated lg:col-span-4">
+              <CardContent className="p-6">
+                <DomainIntelligenceCard />
+              </CardContent>
+            </Card>
 
-          <Card className="surface-elevated lg:col-span-8">
-            <CardContent className="p-6">
-              <SecurityConfigurationCard />
-            </CardContent>
-          </Card>
-        </section>
+            <Card className="surface-elevated lg:col-span-8">
+              <CardContent className="p-6">
+                <SecurityConfigurationCard />
+              </CardContent>
+            </Card>
+          </section>
 
-        <CaseReportsExports items={reports} onGenerate={onGeneratePdf} />
-
-        <div className="text-left text-xs text-muted-foreground">
-          Wireframe data is simulated. Integrate approved enrichment sources before operational use.
-        </div>
-      </main>
+          <div className="text-left text-xs text-muted-foreground">
+            Wireframe data is simulated. Integrate approved enrichment sources before operational use.
+          </div>
+        </main>
+      )}
     </div>
   );
 }
