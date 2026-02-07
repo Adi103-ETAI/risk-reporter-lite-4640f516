@@ -1,5 +1,7 @@
 import * as React from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -39,6 +41,41 @@ function FlyToController({ position, shouldFly }: { position: LatLngExpression; 
   return null;
 }
 
+function ZoomControls() {
+  const map = useMap();
+
+  const handleZoomIn = () => {
+    map.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    map.zoomOut();
+  };
+
+  return (
+    <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
+      <Button
+        onClick={handleZoomIn}
+        size="icon"
+        variant="secondary"
+        className="h-11 w-11 sm:h-10 sm:w-10 rounded-lg border bg-panel/90 backdrop-blur hover:bg-panel shadow-md"
+        aria-label="Zoom in"
+      >
+        <ZoomIn className="h-4 w-4" />
+      </Button>
+      <Button
+        onClick={handleZoomOut}
+        size="icon"
+        variant="secondary"
+        className="h-11 w-11 sm:h-10 sm:w-10 rounded-lg border bg-panel/90 backdrop-blur hover:bg-panel shadow-md"
+        aria-label="Zoom out"
+      >
+        <ZoomOut className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function InteractiveGeoMap({
   latitude = 55.7558,
   longitude = 37.6173,
@@ -59,7 +96,7 @@ export function InteractiveGeoMap({
         zoom={4}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
-        zoomControl={true}
+        zoomControl={false}
       >
         {/* Dark Matter tiles from CartoDB */}
         <TileLayer
@@ -79,6 +116,7 @@ export function InteractiveGeoMap({
         </Marker>
 
         <FlyToController position={position} shouldFly={flyTo} />
+        <ZoomControls />
       </MapContainer>
     </motion.div>
   );
