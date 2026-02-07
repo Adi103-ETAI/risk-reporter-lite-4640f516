@@ -142,4 +142,63 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
+
+  /* CYBERTRACE map overlays */
+  @keyframes radar-sweep {
+    0% {
+      transform: rotate(0deg);
+      opacity: 0.15;
+    }
+    50% {
+      opacity: 0.45;
+    }
+    100% {
+      transform: rotate(360deg);
+      opacity: 0.15;
+    }
+  }
+
+  @keyframes scanlines {
+    0% {
+      transform: translateY(-12%);
+      opacity: 0.0;
+    }
+    20% {
+      opacity: 0.22;
+    }
+    100% {
+      transform: translateY(12%);
+      opacity: 0.0;
+    }
+  }
+
+  .radar-grid {
+    /* lat/long vibe + subtle vignette */
+    background-image:
+      linear-gradient(to right, hsl(var(--brand) / 0.10) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--brand) / 0.10) 1px, transparent 1px),
+      radial-gradient(circle at 50% 45%, hsl(var(--brand) / 0.14), transparent 58%),
+      radial-gradient(circle at 50% 50%, transparent 0%, hsl(var(--background) / 0.0) 58%, hsl(var(--background) / 0.10) 100%);
+    background-size: 34px 34px, 34px 34px, 100% 100%, 100% 100%;
+    background-position: center;
+    mix-blend-mode: multiply;
+  }
+
+  .radar-sweep {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      hsl(var(--brand) / 0.0) 250deg,
+      hsl(var(--brand) / 0.35) 315deg,
+      transparent 360deg
+    );
+    mask-image: radial-gradient(circle at 50% 45%, #000 0%, #000 60%, transparent 74%);
+    animation: radar-sweep 5.2s linear infinite;
+  }
+
+  .map-scanlines {
+    background-image: linear-gradient(to bottom, transparent, hsl(var(--brand) / 0.18), transparent);
+    animation: scanlines 3.2s ease-in-out infinite;
+  }
 }
+
