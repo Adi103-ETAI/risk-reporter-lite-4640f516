@@ -8,7 +8,7 @@
 
 @layer base {
   :root {
-    /* Forensics / law-enforcement UI: cool neutrals + restrained cyan brand */
+    /* Forensics / law-enforcement UI: calm neutrals + restrained cyan accent */
     --background: 220 22% 98%;
     --foreground: 222 35% 12%;
 
@@ -21,9 +21,11 @@
     --panel: 220 26% 96%;
     --panel-foreground: 222 35% 12%;
 
-    --primary: 200 86% 38%;
+    /* Primary = neutral "command" black (matches reference buttons) */
+    --primary: 222 35% 12%;
     --primary-foreground: 210 40% 98%;
 
+    /* Brand = cyan accent (chips, highlights, subtle glows) */
     --brand: 200 86% 38%;
     --brand-foreground: 210 40% 98%;
 
@@ -75,7 +77,7 @@
     --panel: 222 40% 11%;
     --panel-foreground: 210 40% 98%;
 
-    --primary: 200 86% 48%;
+    --primary: 210 40% 98%;
     --primary-foreground: 222 42% 9%;
 
     --brand: 200 86% 48%;
