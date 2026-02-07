@@ -63,13 +63,13 @@ export function HostingGeoPanel({
         <img
           src={geoMap}
           alt="World map visualization for hosting geolocation"
-          className="h-56 w-full object-cover sm:h-64"
+          className="h-56 w-full object-cover sm:h-64 [filter:brightness(1.08)_contrast(1.05)_saturate(1.05)]"
           loading="lazy"
         />
 
-        {/* Legibility overlay */}
+        {/* Legibility overlay (kept subtle so the map stays visible) */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent"
           aria-hidden="true"
         />
 
