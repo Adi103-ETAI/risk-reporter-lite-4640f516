@@ -47,6 +47,7 @@ export function CyberInvestigationDashboard() {
   const [error, setError] = React.useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [result, setResult] = React.useState<AnalysisResult | null>(null);
+  const [shouldFlyTo, setShouldFlyTo] = React.useState(false);
 
   const [reports, setReports] = React.useState<ReportItem[]>([]);
 
@@ -67,11 +68,13 @@ export function CyberInvestigationDashboard() {
 
     setError(null);
     setIsAnalyzing(true);
+    setShouldFlyTo(false);
 
     await new Promise((r) => setTimeout(r, 700));
     setResult(pseudoAnalyze(cleaned));
 
     setIsAnalyzing(false);
+    setShouldFlyTo(true);
   };
 
   const onGeneratePdf = async () => {
@@ -216,7 +219,7 @@ export function CyberInvestigationDashboard() {
 
           <Card className="surface-elevated lg:col-span-8">
             <CardContent className="p-6">
-              <HostingGeoPanel />
+              <HostingGeoPanel flyTo={shouldFlyTo} />
             </CardContent>
           </Card>
         </section>
