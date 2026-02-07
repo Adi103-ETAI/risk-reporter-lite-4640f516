@@ -63,13 +63,13 @@ export function HostingGeoPanel({
         <img
           src={geoMap}
           alt="World map visualization for hosting geolocation"
-          className="h-56 w-full object-cover sm:h-64 [filter:brightness(1.08)_contrast(1.05)_saturate(1.05)]"
+          className="h-48 w-full object-cover sm:h-64 md:h-72 [filter:brightness(1.18)_contrast(1.02)_saturate(1.08)]"
           loading="lazy"
         />
 
         {/* Legibility overlay (kept subtle so the map stays visible) */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-background/10 via-transparent to-transparent"
           aria-hidden="true"
         />
 
@@ -81,8 +81,8 @@ export function HostingGeoPanel({
           </div>
         </div>
 
-        {/* Meta strip */}
-        <div className="absolute left-4 top-4 right-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-panel/80 px-3 py-2 backdrop-blur">
+        {/* Meta strip (stacks below the map on mobile) */}
+        <div className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-panel/90 px-3 py-2 backdrop-blur sm:absolute sm:left-4 sm:top-4 sm:right-4 sm:mx-0 sm:mt-0">
           <div className="flex items-center gap-2 text-xs">
             <Crosshair className="h-4 w-4 text-muted-foreground" />
             <div className="font-medium">{coords}</div>
@@ -96,8 +96,8 @@ export function HostingGeoPanel({
           </div>
         </div>
 
-        {/* Facts card */}
-        <div className="absolute bottom-4 right-4 w-[280px] max-w-[calc(100%-2rem)] rounded-xl border bg-panel/90 p-4 backdrop-blur">
+        {/* Facts card (stacks below the map on mobile) */}
+        <div className="mx-4 mt-3 w-auto max-w-none rounded-xl border bg-panel/90 p-4 backdrop-blur sm:absolute sm:bottom-4 sm:right-4 sm:mx-0 sm:mt-0 sm:w-[280px] sm:max-w-[calc(100%-2rem)]">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground">SERVER LOCATION</div>
