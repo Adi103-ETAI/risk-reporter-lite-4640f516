@@ -45,12 +45,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-
-    // Radix Slot may not forward refs in some builds; avoid passing refs when rendering asChild.
-    // This prevents "Function components cannot be given refs" warnings.
-    const forwardedRef = asChild ? undefined : ref;
-
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={forwardedRef} {...props} />;
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
   },
 );
 Button.displayName = "Button";
