@@ -10,7 +10,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 import { TopNav } from "@/components/TopNav";
 import { RiskAssessmentCard } from "@/components/RiskAssessmentCard";
-import { HostingGeoPanel } from "@/components/HostingGeoPanel";
+import { ScanLocationMap, type ScanMapData } from "@/components/ScanLocationMap";
 import { DomainIntelligenceCard } from "@/components/DomainIntelligenceCard";
 import { SecurityConfigurationCard } from "@/components/SecurityConfigurationCard";
 import { CaseReportsExports, type ReportItem } from "@/components/CaseReportsExports";
@@ -55,7 +55,7 @@ export function CyberInvestigationDashboard() {
   const [error, setError] = React.useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [result, setResult] = React.useState<AnalysisResult | null>(null);
-  const [shouldFlyTo, setShouldFlyTo] = React.useState(false);
+  const [scanMapData, setScanMapData] = React.useState<ScanMapData | null>(null);
 
   const [reports, setReports] = React.useState<ReportItem[]>([]);
   const [cases, setCases] = React.useState<CaseRow[]>([]);
@@ -104,23 +104,36 @@ export function CyberInvestigationDashboard() {
     if (!cleaned) {
       setError("Enter a domain or URL to analyze.");
       setResult(null);
+      setScanMapData(null);
       return;
     }
 
     setError(null);
     setIsAnalyzing(true);
-    setShouldFlyTo(false);
 
     await new Promise((r) => setTimeout(r, 700));
 
     const risk = scoreUrlRisk(cleaned);
+    const score = risk.score;
+
+    // Mock backend response for now (user selected "Mock for now").
+    // Replace this with your real backend API call that returns lat/lon/country/ip/status/score.
+    const mockBackend: ScanMapData = {
+      lat: 28.6139,
+      lon: 77.209,
+      country: "IN",
+      ip: "203.122.58.14",
+      status: "scanned",
+      score,
+    };
+
     setResult({
       risk,
       riskScore: riskScoreFromClassification(risk.classification),
     });
+    setScanMapData(mockBackend);
 
     setIsAnalyzing(false);
-    setShouldFlyTo(true);
   };
 
   const onGeneratePdf = async () => {
@@ -363,13 +376,14 @@ export function CyberInvestigationDashboard() {
                 )}
               </CardContent>
             </Card>
-
-            <Card className="surface-elevated lg:col-span-8">
-              <CardContent className="p-6">
-                <HostingGeoPanel flyTo={shouldFlyTo} />
-              </CardContent>
-            </Card>
           </section>
+
+          {scanMapData ? (
+            <section className="space-y-3">
+              <div className="text-sm font-semibold">Server Location Map</div>
+              <ScanLocationMap data={scanMapData} />
+            </section>
+          ) : null}
 
           <section className="grid gap-6 lg:grid-cols-12">
             <Card className="surface-elevated lg:col-span-4">
