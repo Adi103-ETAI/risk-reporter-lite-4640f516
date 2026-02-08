@@ -3,6 +3,7 @@ import { Crosshair, Globe2, Loader2 } from "lucide-react";
 import { InteractiveGeoMap } from "@/components/InteractiveGeoMap";
 import { RiskSignalsList } from "@/components/RiskSignalsList";
 import { supabase } from "@/integrations/supabase/client";
+import { getRiskRuleLabel } from "@/lib/riskRuleLabels";
 
 type HostingGeoPanelProps = {
   targetUrl?: string;
@@ -48,6 +49,11 @@ type HostingNode = {
   breakdown?: Array<{ rule: string; points: number; detail: string }>;
 };
 
+function sortBreakdownByImpact(items?: Array<{ rule: string; points: number; detail: string }>) {
+  if (!items || items.length === 0) return items;
+  return [...items].sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
+}
+
 function normalizeScanResponse(payload: any): HostingNode[] {
   if (!payload) return [];
 
@@ -69,13 +75,20 @@ function normalizeScanResponse(payload: any): HostingNode[] {
       if (typeof lat !== "number" || typeof lon !== "number") return null;
 
       const riskBlock = x.urlRisk ?? x.risk ?? x.riskResult ?? x;
-      const breakdown = Array.isArray(riskBlock?.breakdown) ? riskBlock.breakdown : Array.isArray(x.breakdown) ? x.breakdown : undefined;
+      const rawBreakdown = Array.isArray(riskBlock?.breakdown)
+        ? riskBlock.breakdown
+        : Array.isArray(x.breakdown)
+          ? x.breakdown
+          : undefined;
+
       const triggeredRules =
         Array.isArray(riskBlock?.triggeredRules)
           ? riskBlock.triggeredRules
           : Array.isArray(x.triggeredRules)
             ? x.triggeredRules
             : undefined;
+
+      const breakdown = sortBreakdownByImpact(rawBreakdown);
 
       return {
         id: String(x.id ?? x.ip ?? `${lat},${lon}`),
@@ -149,10 +162,7 @@ export function HostingGeoPanel({ targetUrl, flyTo = false }: HostingGeoPanelPro
     return nodes.find((n) => n.id === selectedId) ?? nodes[0];
   }, [nodes, selectedId]);
 
-  const coords = React.useMemo(
-    () => formatCoords(selected?.latitude, selected?.longitude),
-    [selected?.latitude, selected?.longitude],
-  );
+  const coords = React.useMemo(() => formatCoords(selected?.latitude, selected?.longitude), [selected?.latitude, selected?.longitude]);
   const localTime = React.useMemo(() => safeLocalTime(selected?.timezone), [selected?.timezone]);
 
   return (
@@ -195,8 +205,8 @@ export function HostingGeoPanel({ targetUrl, flyTo = false }: HostingGeoPanelPro
                 n.org ? `Org: ${n.org}` : "",
                 typeof n.riskScore === "number" ? `Risk: ${n.riskScore}/100` : "",
                 n.classification ? `Class: ${n.classification}` : "",
-                n.triggeredRules?.length ? `Rules: ${n.triggeredRules.join(", ")}` : "",
-                ...topSignals.map((b) => `${b.points > 0 ? "+" : ""}${b.points} ${b.rule}`),
+                n.triggeredRules?.length ? `Rules: ${n.triggeredRules.map(getRiskRuleLabel).join(", ")}` : "",
+                ...topSignals.map((b) => `${b.points > 0 ? "+" : ""}${b.points} ${getRiskRuleLabel(b.rule)}`),
               ].filter(Boolean),
             };
           })}
@@ -254,7 +264,11 @@ export function HostingGeoPanel({ targetUrl, flyTo = false }: HostingGeoPanelPro
             <div>
               <div className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground">RISK BREAKDOWN</div>
               <div className="mt-2">
-                <RiskSignalsList breakdown={selected?.breakdown} emptyLabel="No breakdown returned for this node." />
+                <RiskSignalsList
+                  breakdown={selected?.breakdown}
+                  ruleLabel={getRiskRuleLabel}
+                  emptyLabel="No breakdown returned for this node."
+                />
               </div>
             </div>
 
@@ -265,3 +279,4 @@ export function HostingGeoPanel({ targetUrl, flyTo = false }: HostingGeoPanelPro
     </div>
   );
 }
+
