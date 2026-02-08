@@ -16,18 +16,20 @@ type ScanLocationMapProps = {
   data: ScanMapData;
 };
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
+export function clampScore(score: number) {
+  return Math.min(100, Math.max(0, score));
 }
 
-function classify(score: number): "Safe" | "Suspicious" | "Dangerous" {
-  const s = clamp(score, 0, 100);
+export type RiskClassification = "Safe" | "Suspicious" | "Dangerous";
+
+export function classifyScore(score: number): RiskClassification {
+  const s = clampScore(score);
   if (s <= 20) return "Safe";
   if (s <= 50) return "Suspicious";
   return "Dangerous";
 }
 
-function markerColorHsl(classification: ReturnType<typeof classify>) {
+export function markerColorHsl(classification: RiskClassification) {
   switch (classification) {
     case "Safe":
       return "hsl(var(--success))";
@@ -50,7 +52,7 @@ function Recenter({ center }: { center: LatLngExpression }) {
 
 export function ScanLocationMap({ data }: ScanLocationMapProps) {
   const center: LatLngExpression = [data.lat, data.lon];
-  const classification = classify(data.score);
+  const classification = classifyScore(data.score);
   const color = markerColorHsl(classification);
 
   return (
@@ -81,7 +83,7 @@ export function ScanLocationMap({ data }: ScanLocationMapProps) {
                 <span className="font-semibold">Country:</span> {data.country}
               </div>
               <div>
-                <span className="font-semibold">Score:</span> {clamp(data.score, 0, 100)} ({classification})
+                <span className="font-semibold">Score:</span> {clampScore(data.score)} ({classification})
               </div>
               <div>
                 <span className="font-semibold">Status:</span> {data.status}
