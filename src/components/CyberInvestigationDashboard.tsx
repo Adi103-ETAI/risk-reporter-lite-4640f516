@@ -9,25 +9,22 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 import { TopNav } from "@/components/TopNav";
-import { RiskAssessmentCard } from "@/components/RiskAssessmentCard";
-import { HostingGeoPanel } from "@/components/HostingGeoPanel";
-import { DomainIntelligenceCard } from "@/components/DomainIntelligenceCard";
-import { SecurityConfigurationCard } from "@/components/SecurityConfigurationCard";
+import { ScanRiskSummary } from "@/components/ScanRiskSummary";
+import { ScanResultMap } from "@/components/ScanResultMap";
 import { CaseReportsExports, type ReportItem } from "@/components/CaseReportsExports";
 import { ReportDownloads } from "@/components/ReportDownloads";
 
 import { generateCaseReportPdf, type CaseReportData, type RiskScore } from "@/lib/pdfReport";
-import { scoreUrlRisk, type UrlRiskResult } from "@/lib/urlRisk";
+import { scanUrlWithBackend, type BackendScanResponse } from "@/lib/scanApi";
 
-type AnalysisResult = {
-  riskScore: RiskScore;
-  risk: UrlRiskResult;
+type AnalysisResult = BackendScanResponse & {
+  target: string;
 };
 
 type CaseRow = Tables<"cases">;
 
-function riskScoreFromClassification(classification: UrlRiskResult["classification"]): RiskScore {
-  switch (classification) {
+function riskScoreFromStatus(status: AnalysisResult["status"]): RiskScore {
+  switch (status) {
     case "Safe":
       return "LOW";
     case "Suspicious":
@@ -55,7 +52,6 @@ export function CyberInvestigationDashboard() {
   const [error, setError] = React.useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [result, setResult] = React.useState<AnalysisResult | null>(null);
-  const [shouldFlyTo, setShouldFlyTo] = React.useState(false);
 
   const [reports, setReports] = React.useState<ReportItem[]>([]);
   const [cases, setCases] = React.useState<CaseRow[]>([]);
@@ -109,18 +105,20 @@ export function CyberInvestigationDashboard() {
 
     setError(null);
     setIsAnalyzing(true);
-    setShouldFlyTo(false);
 
-    await new Promise((r) => setTimeout(r, 700));
-
-    const risk = scoreUrlRisk(cleaned);
-    setResult({
-      risk,
-      riskScore: riskScoreFromClassification(risk.classification),
-    });
-
-    setIsAnalyzing(false);
-    setShouldFlyTo(true);
+    try {
+      const data = await scanUrlWithBackend(cleaned);
+      setResult({
+        ...data,
+        target: cleaned,
+      });
+    } catch (e) {
+      console.error("Scan failed", e);
+      setResult(null);
+      setError("Unable to scan this URL right now.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const onGeneratePdf = async () => {
@@ -131,7 +129,7 @@ export function CyberInvestigationDashboard() {
       analystName,
       caseId,
       domain: domain.trim(),
-      riskScore: result.riskScore,
+      riskScore: riskScoreFromStatus(result.status),
       domainDetails: {
         "Registrar": "NameCheap, Inc.",
         "Creation Date": "2023-11-15",
@@ -140,12 +138,12 @@ export function CyberInvestigationDashboard() {
         "Status": "clientTransferProhibited",
       },
       hostingSecurity: {
-        "IP": "192.168.45.12",
-        "Location": "Moscow, RU",
-        "ASN": "AS12345",
-        "Organization": "BadActor Net Ltd.",
-        "TLS": "Valid",
-        "Open Ports": "80, 443, 22, 21",
+        "IP": result.ip,
+        "Location": result.country,
+        "ASN": "—",
+        "Organization": "—",
+        "TLS": "—",
+        "Open Ports": "—",
       },
     };
 
@@ -348,39 +346,21 @@ export function CyberInvestigationDashboard() {
           <section className="grid gap-6 lg:grid-cols-12">
             <Card className="surface-elevated lg:col-span-4">
               <CardContent className="p-6">
-                {result ? (
-                  <RiskAssessmentCard score={result.riskScore} />
-                ) : (
-                  <div className="space-y-3">
-                    <div className="text-sm font-semibold">Risk Assessment</div>
-                    <div className="rounded-xl border bg-panel p-6 text-left">
-                      <div className="text-sm font-medium">Awaiting analysis</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Run “Analyze Target” to compute risk, populate infrastructure details, and enable report generation.
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <ScanRiskSummary score={result?.score} status={result?.status} />
               </CardContent>
             </Card>
 
             <Card className="surface-elevated lg:col-span-8">
-              <CardContent className="p-6">
-                <HostingGeoPanel flyTo={shouldFlyTo} />
-              </CardContent>
-            </Card>
-          </section>
-
-          <section className="grid gap-6 lg:grid-cols-12">
-            <Card className="surface-elevated lg:col-span-4">
-              <CardContent className="p-6">
-                <DomainIntelligenceCard />
-              </CardContent>
-            </Card>
-
-            <Card className="surface-elevated lg:col-span-8">
-              <CardContent className="p-6">
-                <SecurityConfigurationCard />
+              <CardContent className="p-6 space-y-3">
+                <div className="text-sm font-semibold">Server Location</div>
+                <ScanResultMap
+                  lat={result?.lat}
+                  lon={result?.lon}
+                  country={result?.country}
+                  ipOrDomain={result?.target || result?.ip}
+                  score={result?.score}
+                  status={result?.status}
+                />
               </CardContent>
             </Card>
           </section>
