@@ -336,7 +336,7 @@ export function CyberInvestigationDashboard() {
 
               {error ? (
                 <div className="mt-4 rounded-lg border bg-panel px-4 py-3 text-left text-sm">
-                  <span className="font-medium">Input required:</span>{" "}
+                  <span className="font-medium">Scan error:</span>{" "}
                   <span className="text-muted-foreground">{error}</span>
                 </div>
               ) : null}
