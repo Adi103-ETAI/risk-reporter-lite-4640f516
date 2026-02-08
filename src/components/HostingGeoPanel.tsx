@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Crosshair, Globe2, Loader2 } from "lucide-react";
 import { InteractiveGeoMap } from "@/components/InteractiveGeoMap";
+import { RiskSignalsList } from "@/components/RiskSignalsList";
 import { supabase } from "@/integrations/supabase/client";
 
 type HostingGeoPanelProps = {
@@ -43,6 +44,8 @@ type HostingNode = {
   timezone?: string;
   riskScore?: number;
   classification?: "Safe" | "Suspicious" | "Dangerous";
+  triggeredRules?: string[];
+  breakdown?: Array<{ rule: string; points: number; detail: string }>;
 };
 
 function normalizeScanResponse(payload: any): HostingNode[] {
@@ -65,6 +68,15 @@ function normalizeScanResponse(payload: any): HostingNode[] {
         typeof x.longitude === "number" ? x.longitude : typeof x.lon === "number" ? x.lon : typeof x.lng === "number" ? x.lng : null;
       if (typeof lat !== "number" || typeof lon !== "number") return null;
 
+      const riskBlock = x.urlRisk ?? x.risk ?? x.riskResult ?? x;
+      const breakdown = Array.isArray(riskBlock?.breakdown) ? riskBlock.breakdown : Array.isArray(x.breakdown) ? x.breakdown : undefined;
+      const triggeredRules =
+        Array.isArray(riskBlock?.triggeredRules)
+          ? riskBlock.triggeredRules
+          : Array.isArray(x.triggeredRules)
+            ? x.triggeredRules
+            : undefined;
+
       return {
         id: String(x.id ?? x.ip ?? `${lat},${lon}`),
         ip: x.ip,
@@ -75,8 +87,10 @@ function normalizeScanResponse(payload: any): HostingNode[] {
         latitude: lat,
         longitude: lon,
         timezone: x.timezone,
-        riskScore: typeof x.riskScore === "number" ? x.riskScore : typeof x.score === "number" ? x.score : undefined,
-        classification: x.classification,
+        riskScore: typeof x.riskScore === "number" ? x.riskScore : typeof x.score === "number" ? x.score : riskBlock?.score,
+        classification: x.classification ?? riskBlock?.classification,
+        triggeredRules,
+        breakdown,
       } satisfies HostingNode;
     })
     .filter(Boolean) as HostingNode[];
@@ -168,19 +182,24 @@ export function HostingGeoPanel({ targetUrl, flyTo = false }: HostingGeoPanelPro
 
       <div className="relative overflow-hidden rounded-xl border bg-background h-[400px] sm:h-[480px] md:h-[520px]">
         <InteractiveGeoMap
-          markers={nodes.map((n) => ({
-            id: n.id,
-            latitude: n.latitude,
-            longitude: n.longitude,
-            title: n.location || n.ip || "Hosting node",
-            subtitle: n.ip,
-            metaLines: [
-              n.asn ? `ASN: ${n.asn}` : "",
-              n.org ? `Org: ${n.org}` : "",
-              typeof n.riskScore === "number" ? `Risk: ${n.riskScore}/100` : "",
-              n.classification ? `Class: ${n.classification}` : "",
-            ].filter(Boolean),
-          }))}
+          markers={nodes.map((n) => {
+            const topSignals = (n.breakdown ?? []).slice(0, 3);
+            return {
+              id: n.id,
+              latitude: n.latitude,
+              longitude: n.longitude,
+              title: n.location || n.ip || "Hosting node",
+              subtitle: n.ip,
+              metaLines: [
+                n.asn ? `ASN: ${n.asn}` : "",
+                n.org ? `Org: ${n.org}` : "",
+                typeof n.riskScore === "number" ? `Risk: ${n.riskScore}/100` : "",
+                n.classification ? `Class: ${n.classification}` : "",
+                n.triggeredRules?.length ? `Rules: ${n.triggeredRules.join(", ")}` : "",
+                ...topSignals.map((b) => `${b.points > 0 ? "+" : ""}${b.points} ${b.rule}`),
+              ].filter(Boolean),
+            };
+          })}
           flyTo={flyTo}
           latitude={selected?.latitude}
           longitude={selected?.longitude}
@@ -216,22 +235,30 @@ export function HostingGeoPanel({ targetUrl, flyTo = false }: HostingGeoPanelPro
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+          <div className="mt-3 space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <div className="text-muted-foreground">ASN</div>
+                <div className="font-medium">{selected?.asn || "—"}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">ORGANIZATION</div>
+                <div className="font-medium">{selected?.org || "—"}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-muted-foreground">ISP NAME</div>
+                <div className="font-medium text-brand">{selected?.isp || "—"}</div>
+              </div>
+            </div>
+
             <div>
-              <div className="text-muted-foreground">ASN</div>
-              <div className="font-medium">{selected?.asn || "—"}</div>
+              <div className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground">RISK BREAKDOWN</div>
+              <div className="mt-2">
+                <RiskSignalsList breakdown={selected?.breakdown} emptyLabel="No breakdown returned for this node." />
+              </div>
             </div>
-            <div>
-              <div className="text-muted-foreground">ORGANIZATION</div>
-              <div className="font-medium">{selected?.org || "—"}</div>
-            </div>
-            <div className="col-span-2">
-              <div className="text-muted-foreground">ISP NAME</div>
-              <div className="font-medium text-brand">{selected?.isp || "—"}</div>
-            </div>
-            {loadError ? (
-              <div className="col-span-2 text-xs text-muted-foreground">{loadError}</div>
-            ) : null}
+
+            {loadError ? <div className="text-xs text-muted-foreground">{loadError}</div> : null}
           </div>
         </div>
       </div>
