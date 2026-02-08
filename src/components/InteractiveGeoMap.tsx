@@ -24,6 +24,22 @@ type InteractiveGeoMapProps = {
   longitude?: number;
   location?: string;
   flyTo?: boolean;
+  markers?: Array<{
+    id: string;
+    latitude: number;
+    longitude: number;
+    title: string;
+    subtitle?: string;
+    metaLines?: string[];
+  }>;
+  onMarkerSelect?: (marker: {
+    id: string;
+    latitude: number;
+    longitude: number;
+    title: string;
+    subtitle?: string;
+    metaLines?: string[];
+  }) => void;
 };
 
 function FlyToController({ position, shouldFly }: { position: LatLngExpression; shouldFly: boolean }) {
@@ -78,11 +94,17 @@ function ZoomControls() {
 
 export function InteractiveGeoMap({
   latitude = 28.6139,
-  longitude = 77.2090,
+  longitude = 77.209,
   location = "New Delhi, IN",
   flyTo = false,
+  markers,
+  onMarkerSelect,
 }: InteractiveGeoMapProps) {
-  const position: LatLngExpression = [latitude, longitude];
+  const fallbackPosition: LatLngExpression = [latitude, longitude];
+  const primaryMarker = markers && markers.length > 0 ? markers[0] : null;
+  const position: LatLngExpression = primaryMarker
+    ? ([primaryMarker.latitude, primaryMarker.longitude] as LatLngExpression)
+    : fallbackPosition;
 
   return (
     <motion.div
@@ -106,14 +128,39 @@ export function InteractiveGeoMap({
           maxZoom={20}
         />
 
-        <Marker position={position}>
-          <Popup>
-            <div className="text-sm font-semibold">{location}</div>
-            <div className="text-xs text-muted-foreground">
-              {latitude.toFixed(4)}°, {longitude.toFixed(4)}°
-            </div>
-          </Popup>
-        </Marker>
+        {(markers && markers.length > 0 ? markers : [
+          {
+            id: "default",
+            latitude,
+            longitude,
+            title: location,
+            subtitle: `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`,
+          },
+        ]).map((m) => (
+          <Marker
+            key={m.id}
+            position={[m.latitude, m.longitude]}
+            eventHandlers={{
+              click: () => {
+                onMarkerSelect?.(m);
+              },
+            }}
+          >
+            <Popup>
+              <div className="text-sm font-semibold">{m.title}</div>
+              {m.subtitle ? <div className="text-xs text-muted-foreground">{m.subtitle}</div> : null}
+              {m.metaLines && m.metaLines.length ? (
+                <div className="mt-2 space-y-1">
+                  {m.metaLines.map((line, idx) => (
+                    <div key={idx} className="text-xs text-muted-foreground">
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </Popup>
+          </Marker>
+        ))}
 
         <FlyToController position={position} shouldFly={flyTo} />
         <ZoomControls />

@@ -366,7 +366,7 @@ export function CyberInvestigationDashboard() {
 
             <Card className="surface-elevated lg:col-span-8">
               <CardContent className="p-6">
-                <HostingGeoPanel flyTo={shouldFlyTo} />
+                <HostingGeoPanel targetUrl={domain} flyTo={shouldFlyTo} />
               </CardContent>
             </Card>
           </section>
